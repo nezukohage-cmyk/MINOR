@@ -1,0 +1,89 @@
+#########################
+# GO BACKEND
+#########################
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build artifacts
+bin/
+build/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Vendor (if using go mod vendor)
+vendor/
+
+# Logs
+*.log
+
+# Environment configs
+.env
+.env.*
+*.local
+
+# Temporary files
+*~
+*.swp
+*.swo
+
+#########################
+# MONGO / DATA FILES
+#########################
+
+# Local database dumps
+dump/
+mongodb-data/
+
+#########################
+# FLUTTER FRONTEND
+#########################
+
+# Flutter/Dart build
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# IntelliJ / Android Studio
+*.iml
+.idea/
+.android/
+.ios/
+.macos/
+web/.dart_tool/
+
+# Generated files
+*.lock
+pubspec.lock
+
+#########################
+# OS & EDITOR FILES
+#########################
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# VS Code
+.vscode/
+*.code-workspace
+
+#########################
+# NODE MODULES (if any)
+#########################
+
+node_modules/
