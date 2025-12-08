@@ -15,6 +15,8 @@ func NoteRoutes(r *gin.Engine) {
 	notes.POST("/:id/downvote", middleware.AuthRequired(), controllers.Downvote)
 	notes.POST("/:id/save", middleware.AuthRequired(), controllers.ToggleSave)
 	notes.GET("/saved", middleware.AuthRequired(), controllers.GetSavedNotes)
+	notes.GET("/subjects", controllers.Subjects)
+	notes.GET("/topics", controllers.Topics)
 	//notes.POST("/test-moderation", middleware.AuthRequired(), services.ModerateImageHF)
 
 }
