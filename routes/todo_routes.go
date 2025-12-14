@@ -15,4 +15,5 @@ func TodoRoutes(r *gin.Engine) {
 
 	todo.GET("/:date", controllers.GetTasksByDate)
 	todo.POST("/:id/toggle", controllers.ToggleTask)
+	todo.POST("/create", controllers.CreateTask)
 }

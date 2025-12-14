@@ -1,12 +1,12 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	//"lexxi/config"
 	database "lexxi/database/migrations"
 	"lexxi/services"
 
-	//	"os"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,6 @@ import (
 
 // func main() {
 // 	LoadEnv()
-// 	fmt.Println("DEBUG API KEY:", os.Getenv("GEMINI_API_KEY"))
 
 // 	database.Connect()
 // 	services.InitCloudinary()
@@ -71,6 +70,7 @@ func main() {
 	LoadEnv()
 	database.Connect()
 	services.InitCloudinary()
+	fmt.Println("DEBUG API KEY:", os.Getenv("GEMINI_API_KEY"))
 
 	r := gin.Default()
 
@@ -84,7 +84,7 @@ func main() {
 
 	// Routes
 	routes.AuthRoutes(r)
-	routes.NoteRoutes(r)
+	//routes.NoteRoutes(r)
 	routes.UserRoutes(r)
 	routes.SearchRoutes(r)
 	routes.MyNotesRoutes(r)
@@ -97,6 +97,7 @@ func main() {
 	routes.ChatRoutes(r)
 	routes.PlannerRoutes(r)
 	routes.TodoRoutes(r)
+	routes.ClusterRoutes(r)
 
 	r.Run(":8080")
 }

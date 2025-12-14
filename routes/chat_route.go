@@ -12,13 +12,15 @@ import (
 func ChatRoutes(r *gin.Engine) {
 
 	chat := r.Group("/chat")
-
-	// All chat actions require login
 	chat.Use(middleware.AuthRequired())
 
-	// ---------- AI Chat ----------
-	chat.POST("/ask", controllers.AskChatbot)
+	// ---------- AI Summarizer ----------
+	chat.POST("/Summarize", controllers.SummarizeText)
 
+	// ---------- Summaries List ----------
+	chat.GET("/summaries", controllers.GetSummaries)
+
+	// ---------- Debug ----------
 	chat.GET("/env-test", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"GEMINI_API_KEY": os.Getenv("GEMINI_API_KEY"),
@@ -34,7 +36,7 @@ func ChatRoutes(r *gin.Engine) {
 		c.JSON(200, gin.H{"models": out})
 	})
 
-	// ---------- Chat Sessions ----------
+	// ---------- Chat Sessions (Optional) ----------
 	chat.POST("/session/new", controllers.NewChatSession)
 	chat.GET("/session/list", controllers.ListChatSessions)
 	chat.GET("/session/:id", controllers.GetChatSession)

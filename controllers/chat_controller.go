@@ -8,36 +8,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AskChatbot(c *gin.Context) {
+func SummarizeText(c *gin.Context) {
 
 	var body struct {
-		Subject  string `json:"subject"`  // optional
-		Question string `json:"question"` // required
+		Text string `json:"text" binding:"required"`
 	}
 
-	// Parse JSON
-	if err := c.BindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+	// Validate request
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "text is required"})
 		return
 	}
 
-	// Question is mandatory
-	if strings.TrimSpace(body.Question) == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "question is required"})
+	if strings.TrimSpace(body.Text) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "text cannot be empty"})
 		return
 	}
 
-	// Call Gemini
-	answer, err := services.AskGemini(body.Subject, body.Question)
+	summary, err := services.Summarize(body.Text)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Response
 	c.JSON(http.StatusOK, gin.H{
-		"subject":  body.Subject,
-		"question": body.Question,
-		"answer":   answer,
+		"summary": summary,
 	})
+}
+func GetSummaries(c *gin.Context) {
+	userID := c.GetString("user_id")
+
+	// Fetch summaries from DB
+	items, err := services.FetchSummaries(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch summaries"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"summaries": items})
 }
