@@ -8,4 +8,6 @@ type Cluster struct {
 	Name        string   `json:"name" bson:"name"`
 	Description string   `json:"description" bson:"description"`
 	Tags        []string `json:"tags" bson:"tags"`
+
+	Semester int `json:"semester" bson:"semester"`
 }

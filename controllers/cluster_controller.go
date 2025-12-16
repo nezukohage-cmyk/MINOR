@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	//"strings"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kamva/mgm/v3"
@@ -18,10 +19,16 @@ func CreateCluster(c *gin.Context) {
 		Name        string   `json:"name" binding:"required"`
 		Description string   `json:"description"`
 		Tags        []string `json:"tags"`
+		Semester    int      `json:"semester" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if body.Semester < 1 || body.Semester > 8 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid semester"})
 		return
 	}
 
@@ -29,6 +36,7 @@ func CreateCluster(c *gin.Context) {
 		Name:        body.Name,
 		Description: body.Description,
 		Tags:        body.Tags,
+		Semester:    body.Semester,
 	}
 
 	if err := mgm.Coll(cluster).Create(cluster); err != nil {
@@ -36,39 +44,44 @@ func CreateCluster(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Cluster created",
-		"data":    cluster,
-	})
+	c.JSON(http.StatusOK, gin.H{"data": cluster})
 }
 
 func ListClusters(c *gin.Context) {
-	search := c.Query("q")
+	semStr := c.Query("semester")
 
-	filter := bson.M{}
-
-	if search != "" {
-		filter = bson.M{
-			"$or": []bson.M{
-				{"name": bson.M{"$regex": search, "$options": "i"}},
-				{"tags": bson.M{"$regex": search, "$options": "i"}},
-				{"description": bson.M{"$regex": search, "$options": "i"}},
-			},
-		}
-	}
-
-	var clusters []models.Cluster
-	err := mgm.Coll(&models.Cluster{}).SimpleFind(&clusters, filter)
-
+	semester, err := strconv.Atoi(semStr)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load clusters"})
+		c.JSON(400, gin.H{"error": "invalid semester"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": clusters})
+	var clusters []models.Cluster
+
+	err = mgm.Coll(&models.Cluster{}).SimpleFind(
+		&clusters,
+		bson.M{"semester": semester},
+	)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"data": clusters})
+	fmt.Println("Semester query:", semester)
+	fmt.Println("Found clusters:", len(clusters))
 }
 
 func UploadClusterNote(c *gin.Context) {
+	fmt.Println("HIT UploadClusterNote controller")
+	fmt.Println("Raw Content-Type:", c.ContentType())
+
+	// 🔥 FORCE multipart parsing (CRITICAL)
+	if _, err := c.MultipartForm(); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid multipart form"})
+		return
+	}
+
 	clusterID := c.PostForm("cluster_id")
 	title := c.PostForm("title")
 	uploaderID := c.GetString("user_id")
@@ -105,7 +118,10 @@ func UploadClusterNote(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Upload successful", "data": note})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Upload successful",
+		"data":    note,
+	})
 }
 
 // //////////////////////////////////////////////////////////////////////////////////
@@ -141,18 +157,12 @@ func GetCluster(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": cluster})
 }
-
-// //////////////////////////////////////////////////////////////////////////////////
-// 6) DELETE A NOTE (OPTIONAL)
-// //////////////////////////////////////////////////////////////////////////////////
 func DeleteClusterNote(c *gin.Context) {
 	noteID := c.Param("id")
 	userID := c.GetString("user_id")
 
 	note := &models.ClusterNote{}
-	err := mgm.Coll(note).FindByID(noteID, note)
-
-	if err != nil {
+	if err := mgm.Coll(note).FindByID(noteID, note); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	}
@@ -162,14 +172,19 @@ func DeleteClusterNote(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Not allowed"})
 		return
 	}
+	if note.FileURL != "" {
+		_ = services.DeleteFromCloudinary(note.FileURL)
+	}
 
+	// delete DB record
 	if err := mgm.Coll(note).Delete(note); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete note"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Note deleted"})
 }
+
 func DeleteCluster(c *gin.Context) {
 	id := c.Param("id")
 

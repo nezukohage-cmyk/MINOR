@@ -50,3 +50,13 @@ func UploadFile(fileHeader *multipart.FileHeader, folder string) (string, error)
 
 	return uploadResult.SecureURL, nil
 }
+func DeleteFromCloudinary(publicID string) error {
+	_, err := cld.Upload.Destroy(
+		context.Background(),
+		uploader.DestroyParams{
+			PublicID:     publicID,
+			ResourceType: "raw", // REQUIRED for PDFs
+		},
+	)
+	return err
+}

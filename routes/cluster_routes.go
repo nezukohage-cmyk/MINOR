@@ -12,7 +12,7 @@ func ClusterRoutes(r *gin.Engine) {
 	cluster.Use(middleware.AuthRequired())
 
 	cluster.POST("/create", controllers.CreateCluster)
-	cluster.GET("/", controllers.ListClusters)
+	cluster.GET("", controllers.ListClusters)
 	cluster.GET("/:id", controllers.GetCluster)
 
 	cluster.POST("/upload", controllers.UploadClusterNote)
