@@ -14,4 +14,5 @@ func QuizRoutes(r *gin.Engine) {
 	q.POST("/start", controllers.StartQuiz)
 	//q.GET("/:quiz_id/questions", controllers.QuizPage)
 	q.POST("/submit", controllers.SubmitQuiz)
+	q.GET("/history", controllers.GetQuizHistory)
 }

@@ -22,7 +22,7 @@ func GetTags(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"tags": tags})
+	c.JSON(http.StatusOK, gin.H{"data": tags})
 }
 
 func CreateTag(c *gin.Context) {
