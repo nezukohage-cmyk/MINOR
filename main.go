@@ -91,7 +91,7 @@ func main() {
 	routes.CommunityRoutes(r)
 	routes.CommentRoutes(r)
 	routes.TagRoutes(r)
-	//routes.QuestionRoutes(r)
+	routes.QuestionRoutes(r)
 	routes.QuizRoutes(r)
 	routes.FeedRoutes(r)
 	routes.ChatRoutes(r)

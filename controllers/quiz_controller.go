@@ -42,7 +42,6 @@ func min(a, b int) int {
 	return b
 }
 
-// -------------------- START QUIZ --------------------
 func StartQuiz(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
@@ -68,38 +67,40 @@ func StartQuiz(c *gin.Context) {
 
 	for _, subj := range req.Subjects {
 
+		subj = normalize(subj)
 		requested := req.Count[subj]
+
 		if requested <= 0 {
 			continue
 		}
 
+		// ✅ MATCH DB SCHEMA
 		filter := bson.M{
 			"subject_id": subj,
 		}
 
 		if topics, ok := req.Topics[subj]; ok && len(topics) > 0 {
-			filter["topic_ids"] = bson.M{"$in": topics}
+			normTopics := []string{}
+			for _, t := range topics {
+				normTopics = append(normTopics, normalize(t))
+			}
+			filter["topic_ids"] = bson.M{"$in": normTopics}
 		}
 
 		var questions []models.Question
-		_ = mgm.Coll(&models.Question{}).SimpleFind(&questions, filter)
+		if err := mgm.Coll(&models.Question{}).SimpleFind(&questions, filter); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+			return
+		}
 
 		ids := []string{}
 		for _, q := range questions {
 			ids = append(ids, q.ID.Hex())
-			fmt.Println("---- QUIZ DEBUG ----")
-			fmt.Println("SUBJECT:", subj)
-			fmt.Println("REQUESTED COUNT:", requested)
-			fmt.Println("TOPICS FROM REQUEST:", req.Topics[subj])
-			fmt.Println("MONGO FILTER:", filter)
-			fmt.Println("MATCHED QUESTIONS:", len(ids))
-			fmt.Println("--------------------")
-
 		}
 
 		meta[subj] = map[string]int{
-			"available": len(ids),
 			"requested": requested,
+			"available": len(ids),
 		}
 
 		if len(ids) == 0 {
@@ -120,17 +121,17 @@ func StartQuiz(c *gin.Context) {
 
 	if len(finalIDs) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "no questions available",
+			"error": "insufficient questions",
 			"meta":  meta,
 		})
 		return
 	}
 
-	// create quiz session
 	session := &models.QuizSession{
 		UserID:         userID,
 		Subjects:       req.Subjects,
 		QuestionIDs:    finalIDs,
+		RequestedCount: req.Count,
 		TotalQuestions: len(finalIDs),
 		Score:          0,
 		StartedAt:      time.Now().UTC(),
@@ -141,7 +142,6 @@ func StartQuiz(c *gin.Context) {
 		return
 	}
 
-	// load first 10 questions
 	pageIDs := finalIDs[:min(10, len(finalIDs))]
 	objIDs := []primitive.ObjectID{}
 
@@ -169,10 +169,10 @@ func StartQuiz(c *gin.Context) {
 		"quiz_id":         session.ID.Hex(),
 		"total_questions": session.TotalQuestions,
 		"questions":       out,
+		"meta":            meta,
 	})
 }
 
-// -------------------- SUBMIT QUIZ --------------------
 func SubmitQuiz(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"os"
+	"strings"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -29,8 +30,9 @@ func InitCloudinary() {
 	fmt.Println("Cloudinary is connected")
 }
 
-// FINAL VERSION: UploadFile without gin.Context
+// UploadFile uploads PDFs correctly as RAW assets
 func UploadFile(fileHeader *multipart.FileHeader, folder string) (string, error) {
+	fmt.Println("🔥 UPLOAD USING RAW RESOURCE TYPE")
 
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -38,10 +40,23 @@ func UploadFile(fileHeader *multipart.FileHeader, folder string) (string, error)
 	}
 	defer file.Close()
 
-	uploadResult, err := cld.Upload.Upload(context.Background(), file, uploader.UploadParams{
-		Folder:       folder, // dynamic cluster folder
-		ResourceType: "raw",  // required for PDFs
-	})
+	if !strings.HasSuffix(strings.ToLower(fileHeader.Filename), ".pdf") {
+		return "", fmt.Errorf("only PDF files are allowed")
+	}
+
+	//useFilename := true
+	//uniqueFilename := false
+
+	uploadResult, err := cld.Upload.Upload(
+		context.Background(),
+		file,
+		uploader.UploadParams{
+			Folder:       folder,
+			ResourceType: "raw",
+			//UseFilename:    &useFilename,
+			//UniqueFilename: &uniqueFilename,
+		},
+	)
 
 	if err != nil {
 		fmt.Println("Cloudinary upload error:", err)
