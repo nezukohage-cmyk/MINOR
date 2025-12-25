@@ -84,7 +84,6 @@ func main() {
 
 	// Routes
 	routes.AuthRoutes(r)
-	//routes.NoteRoutes(r)
 	routes.UserRoutes(r)
 	routes.SearchRoutes(r)
 	routes.MyNotesRoutes(r)
@@ -98,6 +97,7 @@ func main() {
 	routes.PlannerRoutes(r)
 	routes.TodoRoutes(r)
 	routes.ClusterRoutes(r)
+	routes.NotesRoutes(r)
 
 	r.Run(":8080")
 }

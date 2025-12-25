@@ -30,12 +30,12 @@ func GetQuizHistory(c *gin.Context) {
 
 	for _, s := range sessions {
 		out = append(out, gin.H{
-			"quiz_id":         s.ID.Hex(),
-			"subjects":        s.Subjects,
-			"score":           s.Score,
-			"total_questions": s.TotalQuestions,
-			"started_at":      s.StartedAt,
-			"submitted_at":    s.SubmittedAt,
+			"quiz_id":          s.ID.Hex(),
+			"subjects":         s.Subjects,
+			"score":            s.Score,
+			"served_questions": len(s.QuestionIDs),
+			"started_at":       s.StartedAt,
+			"submitted_at":     s.SubmittedAt,
 		})
 	}
 

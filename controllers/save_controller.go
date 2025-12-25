@@ -41,7 +41,7 @@ func ToggleSave(c *gin.Context) {
 		"saved": true,
 	})
 }
-func GetSavedNotes(c *gin.Context) {
+func GetSavedNotes1(c *gin.Context) {
 	userID := c.GetString("user_id")
 
 	user := &models.User{}
